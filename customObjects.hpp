@@ -7,12 +7,17 @@
 
 class Player : public OBJ::GameObject {
 public:
-	Player(sf::Vector2f pos, int _id) : GameObject("Player") {
+	Player(sf::Vector2f pos, int _id, sf::Text txt) : GameObject("Player") {
 		GameObject::Pos = pos;
+		shape.setFillColor(sf::Color::Blue);
 		shape.setSize(sf::Vector2f(100,100));
 		GameObject::Kinectic = true;
 		id = _id;
+		health = 100;
+		label = txt;
+		label.setString(std::to_string(_id));
 	};
+	sf::Text label;
 	int id;
 	int health;
 	sf::RectangleShape shape;
@@ -34,6 +39,7 @@ public:
 			bool f = true;
 			while (true) {
 				if (f) {
+					f = false;
 					buf[c] = '{';
 					c++;
 				}
@@ -44,6 +50,7 @@ public:
 					}
 					buf[c] = '}';
 					c++;
+					break;
 				}
 			}
 		}
@@ -51,14 +58,16 @@ public:
 		
 	}
 
-	void update() {
+	void Update(std::vector<OBJ::GameObject*>& objects, float delta) {
 		if (GameObject::Kinectic)
 			GameObject::Pos += GameObject::Force;
+		label.setPosition(sf::Vector2f(GameObject::Pos.x+40, GameObject::Pos.y+40));
 		shape.setPosition(GameObject::Pos);
 	}
 
-	void draw(sf::RenderWindow& Window) {
+	void Draw(sf::RenderWindow& Window) {
 		Window.draw(shape);
+		Window.draw(label);
 	}
 	
 };

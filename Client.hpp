@@ -20,17 +20,42 @@ public:
 class ClientData {
 public:
 	ClientData(std::vector<char>buf) {
+		int c = 0;
 		for (int i = 0; i < 4; i++) {
 			bool atNumber = false;
 			int number = 0;
+			bool atPoint = false;
+			bool negative = false;
 			while (i < 4) {
-				if (buf[i] == '}')
+				if (buf[c] == '}') {
+					c++;
 					break;
-				if (std::isdigit(buf[i]))
-					number * 10 + (buf[i] - 48);
-				if (buf[i] == '{')
+				}
+					
+				if (std::isdigit(buf[c])) {
+					if (!atPoint) {
+						number = number * 10 + (buf[c] - 48);
+					}
+					else {
+						number = number + ((-c) * 10) * (buf[c] - 48);
+					}
+					
+				}
+				else if (buf[c] == '{') {
 					atNumber = true;
+				}
+				else if (buf[c] == '-') {
+					negative = true;
+				}
+					
+					
+				if (buf[c] == '.') {
+					atPoint = true;
+				}
+				c++;
 			}
+			if (negative)
+				number = (-1) * number;
 			if (i == 0) {
 				id = number;
 			}

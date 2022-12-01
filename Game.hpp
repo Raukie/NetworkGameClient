@@ -36,12 +36,12 @@ public:
 			OBJ::GameObject* Object = UiObjects[i];
 			Object->Draw(Window);
 			Object->Update(GameObjects, delta);
+			
 		}
 
 		//All the game objects
 		Window.setView(View);
-		if (follow)
-			View.setCenter(target->Pos);
+		
 		for (int i = 0; i < GameObjects.size(); i++) {
 			
 			OBJ::GameObject* Object = GameObjects[i];
@@ -49,7 +49,10 @@ public:
 			Object->Update(GameObjects, delta);
 			
 			
+			
 		}
+		if (follow)
+			View.setCenter(target->Pos);
 		Window.display();
 		
 	}
