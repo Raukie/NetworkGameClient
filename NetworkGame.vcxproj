@@ -266,6 +266,7 @@
     <ClInclude Include="include\SFML\Window\Window.hpp" />
     <ClInclude Include="include\SFML\Window\WindowHandle.hpp" />
     <ClInclude Include="include\SFML\Window\WindowStyle.hpp" />
+    <ClInclude Include="Networking.hpp" />
   </ItemGroup>
   <ItemGroup>
     <Font Include="Minecraft.ttf" />

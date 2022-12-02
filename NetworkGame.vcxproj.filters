@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="GameFiles">
+      <UniqueIdentifier>{c837c9b7-cf5d-4bbf-a76d-5ce461834685}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -48,26 +51,14 @@
     <ClCompile Include="Source.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Game.cpp">
-      <Filter>Header Files</Filter>
-    </ClCompile>
     <ClCompile Include="Client.cpp">
-      <Filter>Header Files</Filter>
+      <Filter>GameFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="Game.cpp">
+      <Filter>GameFiles</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="customObjects.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Game.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GameObject.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Client.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\SFML\Audio\AlResource.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -361,6 +352,21 @@
     </ClInclude>
     <ClInclude Include="include\SFML\Window.hpp">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Client.hpp">
+      <Filter>GameFiles</Filter>
+    </ClInclude>
+    <ClInclude Include="customObjects.hpp">
+      <Filter>GameFiles</Filter>
+    </ClInclude>
+    <ClInclude Include="Game.hpp">
+      <Filter>GameFiles</Filter>
+    </ClInclude>
+    <ClInclude Include="GameObject.hpp">
+      <Filter>GameFiles</Filter>
+    </ClInclude>
+    <ClInclude Include="Networking.hpp">
+      <Filter>GameFiles</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -4,6 +4,8 @@
 #include "customObjects.hpp"
 #include <vector>
 #include <string>
+#include <thread>
+#include <mutex>
 class Client {
 public:
 	bool IsSpawned;
@@ -76,6 +78,24 @@ public:
 	int id;
 };
 
+class SharedClientData {
 
+public:
+	void Lock() {
+		std::unique_lock<std::mutex> local_lock(mx);
+		lock = std::move(local_lock);
+	}
+
+	void Release() {
+		lock.unlock();
+	}
+
+
+	std::vector<ClientData> IncomingClients;
+
+private:
+	std::mutex mx;
+	std::unique_lock<std::mutex> lock;
+};
 
 #endif

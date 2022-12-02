@@ -60,6 +60,7 @@ namespace OBJ {
 			for (int i = 0; i < Objects.size(); i++) {
 				OBJ::GameObject* Object = Objects[i];
 				if (Object->ObjectTag == tag) {
+					
 					foundObjects.push_back(Object);
 				}
 			}

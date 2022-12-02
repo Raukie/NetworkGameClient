@@ -10,8 +10,9 @@
 #include "customObjects.hpp"
 #include "Game.cpp"
 #include "Client.hpp"
-
-
+#include <mutex>
+#include <thread>
+#include "Networking.hpp"
 
 //wsa version
 #define SCK_VERSION2 0x0202 //version 2
@@ -90,6 +91,8 @@ int main() {
 	Window.setView(vw);
 	sf::Clock clock;
 
+	//fix for focussing issues
+	SetForegroundWindow(Window.getSystemHandle());
 
 	//setting up the ui font
 	sf::Text txt;
@@ -103,7 +106,7 @@ int main() {
 	txt.setFillColor(sf::Color::White);
 	Player player(sf::Vector2f(100, 100), client.id, txt);
 	game.GameObjects.push_back(&player);
-	game.follow = true;
+	game.follow = false;
 	game.target = game.GameObjects[0];
 
 	//network setup
@@ -111,49 +114,50 @@ int main() {
 	FD_ZERO(&Master);
 	FD_SET(ClientSocket, &Master);
 
+	//setting up the shared container and networking logic
+	SharedClientData SharedData;
+	NET::NetworkLogic Network(Master, std::ref(SharedData), ClientSocket);
+	std::thread t1(&NET::NetworkLogic::ProcessData, &Network);
+
+
 	int i = 0;
-	timeval timeout;
-	timeout.tv_usec = 10;
+	bool focus = true;
 	while (Window.isOpen()) {
 		
-
-
-
-
-
-
-	
-
 		sf::Event Event;
-
+		
 		//game logic
 		sf::Vector2f mov = sf::Vector2f(0, 0);
 		while (Window.pollEvent(Event)) {
 			//close window if window is closed on desktop
-			if (Event.type == sf::Event::Closed) Window.close();
+			if (Event.type == sf::Event::Closed) 
+				Window.close();
+
+			if (Event.type == sf::Event::LostFocus)
+				focus = false;
+
+			if (Event.type == sf::Event::GainedFocus)
+				focus = true;
+		}
 
 
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)&&focus) {
+			mov += sf::Vector2f(-1, 0);
+		}
 
 
-			if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
-				mov += sf::Vector2f(-1,0);
-			}
-				
-			
-			if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) {
-				mov += sf::Vector2f(1, 0);
-			}
-				
-			
-			if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) {
-				mov += sf::Vector2f(0, 1);
-			}
-				
-	
-			if (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) {
-				mov += sf::Vector2f(0, -1);
-			}
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::D) && focus) {
+			mov += sf::Vector2f(1, 0);
+		}
 
+
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::S) && focus) {
+			mov += sf::Vector2f(0, 1);
+		}
+
+
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::W) && focus) {
+			mov += sf::Vector2f(0, -1);
 		}
 
 		if (std::abs(mov.x) + std::abs(mov.y) > 1)
@@ -171,42 +175,36 @@ int main() {
 		/// <returns></returns>
 		
 		//networking logic
-		fd_set copy = Master;
 
-		int Activity = select(0, &copy, nullptr, nullptr,&timeout);
-
-		//Recieving bytes
-		if (Activity == 1) {
-			SOCKET socket = copy.fd_array[0];
-			
-			char buffer[4096];
-			ZeroMemory(buffer, 4096);
-			int bytesRecieved = recv(socket, buffer, 4096, 0);
-			if (bytesRecieved > 0) {
-				std::vector<char>Data(buffer, buffer + 4096);
-				ClientData cl(Data);
-				//check if gameobject already exists
-				std::vector<OBJ::GameObject*> objects = game.GetObjectsByTag("Player");
-				bool found = false;
-				for (int i = 0; i < objects.size(); i++) {
-					Player* cur = dynamic_cast<Player*>(objects[i]);
-					if (cl.id == cur->id) {
-						found = true;
-						cur->Pos = sf::Vector2f(cl.x, cl.y);
-						cur->health = cl.health;
-					}
-
-				}
-				if (found == false) {
 		
-					players.push_back(Player(sf::Vector2f(cl.x, cl.y), cl.id, txt));
-		
-					game.GameObjects.push_back(&players[players.size() - 1]);
+		std::vector<OBJ::GameObject*> objects = game.GetObjectsByTag("Player");
+		bool found = false;
+
+		//thread safety
+		SharedData.Lock();
+		std::vector<ClientData> CopyData(SharedData.IncomingClients);
+		SharedData.IncomingClients.clear();
+		SharedData.Release();
+		//check if gameobject already exists
+		for (int x = 0; x < CopyData.size(); x++) {
+			ClientData& cl = CopyData[x];
+			for (int i = 0; i < objects.size(); i++) {
+				Player* cur = dynamic_cast<Player*>(objects[i]);
+				if (cl.id == cur->id) {
+					found = true;
+					cur->Pos = sf::Vector2f(cl.x, cl.y);
+					cur->health = cl.health;
 				}
 			}
-			
+			if (found == false) {
+				players.reserve(players.size()+1);
+				players.push_back(Player(sf::Vector2f(cl.x, cl.y), cl.id, txt));
 
+				game.GameObjects.push_back(&players[players.size() - 1]);
+			}
 		}
+		
+		
 		i++;
 		if (i == 1) {
 			i = 0;
