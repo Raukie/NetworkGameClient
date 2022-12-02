@@ -81,7 +81,7 @@ int main() {
 		}
 		client.SetId(id);
 	}
-	std::vector<Player> players;
+	std::vector<std::unique_ptr<Player>> players;
 	//game setup
 	sf::RenderWindow Window(sf::VideoMode(1280, 720), "MyProgram");
 	sf::View vw;
@@ -197,10 +197,9 @@ int main() {
 				}
 			}
 			if (found == false) {
-				players.reserve(players.size()+1);
-				players.push_back(Player(sf::Vector2f(cl.x, cl.y), cl.id, txt));
+				players.push_back(std::make_unique<Player>(Player(sf::Vector2f(cl.x, cl.y), cl.id, txt)));
 
-				game.GameObjects.push_back(&players[players.size() - 1]);
+				game.GameObjects.push_back(players[players.size() - 1].get());
 			}
 		}
 		
