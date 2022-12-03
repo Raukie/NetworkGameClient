@@ -14,73 +14,22 @@
 #include <thread>
 #include "Networking.hpp"
 
-//wsa version
-#define SCK_VERSION2 0x0202 //version 2
-WSADATA DATA;
-SOCKET ClientSocket;
-SOCKADDR_IN ServerInfo;
+
 
 int main() {
+	//network setup
+	
 
-	ServerInfo.sin_family = AF_INET;
-	ServerInfo.sin_port = htons(55555);
-	InetPton(AF_INET, _T("127.0.0.1"), &ServerInfo.sin_addr.s_addr);
+	
 
-	//iniatilsing wsa
-	long SUCCESSFULL = WSAStartup(SCK_VERSION2, &DATA);
 
-	if (SUCCESSFULL != 0) {
-		std::cout << "WSA Exited with error: " << SUCCESSFULL;
-	}
-	else {
-		std::cout << "WSA Initialised" << std::endl;
-	}
+	//setting up the shared container and networking logic
+	SharedClientData SharedData;
+	SERVER Server(55555, "127.0.0.1");
+	NET::NetworkLogic Network(std::ref(SharedData), Server);
+	
 
-	ClientSocket = INVALID_SOCKET;
-	ClientSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	if (ClientSocket == INVALID_SOCKET) {
-		std::cout << "Socket error: " << WSAGetLastError() << std::endl;
-		WSACleanup();
-		return EXIT_SUCCESS;
-	}
-	else {
-		std::cout << "Socket has been initialised" << std::endl;
-	}
 
-	//connecting to the server
-	if (connect(ClientSocket, (sockaddr*)&ServerInfo, sizeof(ServerInfo)) == SOCKET_ERROR) {
-		std::cout << "Socket connection error: " << WSAGetLastError() << std::endl;
-		closesocket(ClientSocket);
-		WSACleanup();
-	}
-	else {
-		std::cout << "Socket Connection Succefull" << std::endl;
-	}
-
-	char welcomeRes[4096];
-	ZeroMemory(welcomeRes, 4096);
-	int bytesRecieved = recv(ClientSocket, welcomeRes, 4096, 0);
-	Client client = Client();
-	if (bytesRecieved > 0) {
-		//recieved bytes
-		std::cout << welcomeRes << std::endl;
-
-		//grab the id
-		bool atNumber = false;
-		int id = 0;
-		for (int i = 0; i < 4096; i++) {
-			if (atNumber) {
-				if (welcomeRes[i] == ';')
-					break;
-				if (std::isdigit(welcomeRes[i]))
-					id = id * 10 + (welcomeRes[i] - '0');
-			}
-
-			if (welcomeRes[i] == ':')
-				atNumber = true;
-		}
-		client.SetId(id);
-	}
 	std::vector<std::unique_ptr<Player>> players;
 	//game setup
 	sf::RenderWindow Window(sf::VideoMode(1280, 720), "MyProgram");
@@ -104,19 +53,12 @@ int main() {
 	txt.setPosition(sf::Vector2f(10, 10));
 	txt.setCharacterSize(30);
 	txt.setFillColor(sf::Color::White);
-	Player player(sf::Vector2f(100, 100), client.id, txt);
+	Player player(sf::Vector2f(100, 100), Network.Server.ClientId, txt);
 	game.GameObjects.push_back(&player);
 	game.follow = false;
 	game.target = game.GameObjects[0];
 
-	//network setup
-	fd_set Master;
-	FD_ZERO(&Master);
-	FD_SET(ClientSocket, &Master);
 
-	//setting up the shared container and networking logic
-	SharedClientData SharedData;
-	NET::NetworkLogic Network(Master, std::ref(SharedData), ClientSocket);
 	std::thread t1(&NET::NetworkLogic::ProcessData, &Network);
 
 
@@ -207,7 +149,7 @@ int main() {
 		i++;
 		if (i == 1) {
 			i = 0;
-			send(ClientSocket, player.NetData(), 4096, 0);
+			send(Network.Server.ClientSocket, player.NetData(), 4096, 0);
 		}
 		
 		
